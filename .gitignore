@@ -1,0 +1,19 @@
+# ignore all node_modules in all subfolders
+**/node_modules
+
+# ignore coverage everywhere
+**/coverage
+
+# ignore build folders everywhere (if not needed)
+**/build
+
+# miscellaneous
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
