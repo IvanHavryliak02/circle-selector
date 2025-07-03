@@ -9,40 +9,99 @@ export default function(containerSelector){
     setSelectorSize(primaryData, selector); //sets container size
     addPrimaryData(primaryData, selector, elements) //adds to primaryData radius, elementsAmount
     const elementsData = calculateCoords(primaryData, selector, elements); //obj with target coords, element coords and element
-    //functions
+    roundData(elementsData);
+
+    let animationOutRunning = false;
+    let animationInRunning = false;
 
     selectorActivator.addEventListener('mouseenter', () => {
-        function moveItems(){
-            elementsData.forEach(obj => {
+        animationInRunning = false;
+        if(!animationInRunning && !animationOutRunning){
+            animationOutRunning = true;
+            function step(){
+                if(animationOutRunning){                    
+                    moveOutItems();
+                    requestAnimationFrame(step);
+                }
+            }
+            step();
+        } 
+    });
+
+    selectorActivator.addEventListener('mouseleave', () => {
+        animationOutRunning = false;
+        if(!animationInRunning && !animationOutRunning){
+            animationInRunning = true;
+            function step(){
+                if(animationInRunning){                    
+                    moveInItems();
+                    requestAnimationFrame(step);
+                }
+            }
+            step();
+        } 
+
+    });
+
+    //functions
+
+    function moveOutItems(){
+        elementsData.forEach(obj => {
             const currentElement = obj.element;
-            currentElement.style.display = 'block';
-            const diffX = Math.abs(obj.targetCornerX - obj.elementCornerX);
-            const diffY = Math.abs(obj.targetCornerY - obj.elementCornerY);
-            const stepX = diffX/100;
-            const stepY = diffY/100;
-                if(obj.elementCornerX !== obj.targetCornerX){
-                    if(obj.elementCornerX < obj.targetCornerX){
-                        obj.elementCornerX += stepX;
-                        currentElement.style.left = `${obj.elementCornerX}px`;
-                    }else if(obj.elementCornerX > obj.targetCornerX){
-                        obj.elementCornerX -= stepX;
-                        currentElement.style.left = `${obj.elementCornerX}px`;
-                    }
+
+            if(obj.elementCornerX !== obj.targetCornerX){
+                if(obj.elementCornerX < obj.targetCornerX){
+                    obj.elementCornerX += obj.stepX;
+                    currentElement.style.left = `${obj.elementCornerX}px`;
+                }else if(obj.elementCornerX > obj.targetCornerX){
+                    obj.elementCornerX -= obj.stepX;
+                    currentElement.style.left = `${obj.elementCornerX}px`;
                 }
-                if(obj.elementCornerY !== obj.targetCornerY){
-                    if(obj.elementCornerY < obj.targetCornerY){
-                        obj.elementCornerY += stepY;
-                        currentElement.style.top = `${obj.elementCornerY}px`;
-                    }else if(obj.elementCornerY > obj.targetCornerY){
-                        obj.elementCornerY -= stepY;
-                        currentElement.style.top = `${obj.elementCornerY}px`;
-                    }
+            }
+
+            if(obj.elementCornerY !== obj.targetCornerY){
+                if(obj.elementCornerY < obj.targetCornerY){
+                    obj.elementCornerY += obj.stepY;
+                    currentElement.style.top = `${obj.elementCornerY}px`;
+                }else if(obj.elementCornerY > obj.targetCornerY){
+                    obj.elementCornerY -= obj.stepY;
+                    currentElement.style.top = `${obj.elementCornerY}px`;
                 }
-            })
-            requestAnimationFrame(moveItems);
-        }
-        moveItems();
-    })
+            }
+
+            if(obj.elementCornerX === obj.targetCornerX && obj.elementCornerY === obj.targetCornerY){
+                animationOutRunning = false;
+            }
+        })
+    }
+
+    function moveInItems(){
+        elementsData.forEach(obj => {
+            const currentElement = obj.element;
+            if(obj.elementCornerX !== obj.initElementCornerX){
+                if(obj.elementCornerX < obj.initElementCornerX){
+                    obj.elementCornerX += obj.stepX;
+                    currentElement.style.left = `${obj.elementCornerX}px`;
+                }else if(obj.elementCornerX > obj.initElementCornerX){
+                    obj.elementCornerX -= obj.stepX;
+                    currentElement.style.left = `${obj.elementCornerX}px`;
+                }
+            }
+
+            if(obj.elementCornerY !== obj.initElementCornerY){
+                if(obj.elementCornerY < obj.initElementCornerY){
+                    obj.elementCornerY += obj.stepY;
+                    currentElement.style.top = `${obj.elementCornerY}px`;
+                }else if(obj.elementCornerY > obj.initElementCornerY){
+                    obj.elementCornerY -= obj.stepY;
+                    currentElement.style.top = `${obj.elementCornerY}px`;
+                }
+            }
+            if(obj.elementCornerX === obj.initElementCornerX && obj.elementCornerY === obj.initElementCornerY){
+                animationInRunning = false;
+            }
+        })
+    }
 
     function getSelectorParams(selector){
         const startDeg = selector.dataset.startDeg, //string
@@ -87,14 +146,34 @@ export default function(containerSelector){
             const targetCornerX = targetCenterX - elementWidth/2;
             const targetCornerY = targetCenterY - elementHeight/2;
 
+            const diffX = Math.abs(targetCornerX - offsetLeft);
+            const diffY = Math.abs(targetCornerY - offsetTop);
+            const stepX = diffX/60;
+            const stepY = diffY/60;
+
             result.push({
                 element: element,
                 elementCornerX: offsetLeft,
                 elementCornerY: offsetTop,
                 targetCornerX: targetCornerX,
-                targetCornerY: targetCornerY
+                targetCornerY: targetCornerY,
+                initElementCornerX: offsetLeft,
+                initElementCornerY: offsetTop,
+                stepX: stepX,
+                stepY: stepY,
+                targetFlag: 'init position'
             });
         })
         return result
+    }
+
+    function roundData(arrOfObjects){
+        for(let value of arrOfObjects){
+            for(let key in value){
+                if(typeof value[key] == 'number'){
+                    value[key] = (Math.round(value[key]*100)/100)
+                }
+            }
+        }   
     }
 }
