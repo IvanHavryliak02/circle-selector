@@ -4,13 +4,11 @@ export default function(containerSelector){
     const selector = document.querySelector(containerSelector); // Contains selector body
     const selectorActivator = selector.querySelector(`${containerSelector}__activator`); // Contains element which when hovered over, triggers the expansion of the entire radial menu, selector trigger
     const elements = selector.querySelectorAll(`${containerSelector}__element`); // Cards, links, images - whatever else you want to arrange the radial menu in a circular layout
-    
-    const primaryData = getSelectorParams(selector); // object which contains some primary data
-    setSelectorSize(primaryData, selector); // sets container size
-    addPrimaryData(primaryData, selector, elements); // adds to primaryData radius, elementsAmount
-    const elementsData = calculateCoords(primaryData, selector, elements); // obj with element, target coords, element coords and other necessary data
-    roundData(elementsData); // Rounds all numbers in the object to two decimal places
 
+    const primaryData = createPrimaryData(selector, elements); // creats object which contains initialization data
+    let elementsData = calculateCoords(primaryData, selector, elements); // obj with element, target coords, element coords and other necessary data
+    createResponseDesign();
+    
     const flags = {
         animationOutRunning: false, // A flag used to track whether the element MOVING OUT animation is currently running 
         animationInRunning: false // A flag used to track whether the element MOVING IN animation is currently running
@@ -37,8 +35,15 @@ export default function(containerSelector){
         () => {
             moveItems(elementsData, 'initElementCorner', 'animationIn')
     });
+    lookEvent(selectorActivator, 
+        'click', 
+        'animationOutRunning', 
+        'animationInRunning', 
+        () => {
+        moveItems(elementsData, 'targetCorner', 'animationOut')
+    });
 
-    //functions
+    //functions    
 
     function lookEvent(element, event, primaryAnimationFlag, secondaryAnimationFlag, primaryFunction){
         element.addEventListener(event, () => {
@@ -46,7 +51,7 @@ export default function(containerSelector){
             if(!flags[primaryAnimationFlag] && !flags[secondaryAnimationFlag]){
                 flags[primaryAnimationFlag] = true;
                 function step(){
-                    if(flags[primaryAnimationFlag]){                    
+                    if(flags[primaryAnimationFlag]){                   
                         primaryFunction(elementsData);
                         requestAnimationFrame(step);
                     };
@@ -55,25 +60,13 @@ export default function(containerSelector){
             };
         });
     };
- 
-    function getSelectorParams(selector){
-        const startDeg = selector.dataset.startDeg, //string
-              size = selector.dataset.sizeInPx; //string
-              return {startDeg: startDeg, size: size};
-    };
 
-    function setSelectorSize(primaryData, selector){
-        const width = primaryData.size, //string
-              height = primaryData.size; //string
-        selector.style.width = width;
-        selector.style.height = height;
-    };
-
-    function addPrimaryData(primaryData, selector, elements){ //data is array with strings
-        const selectorWidth = parseFloat(selector.style.width)/2,
-              radius = 0.7 * selectorWidth;
-        primaryData.radius = radius;
-        primaryData.elementsAmount = elements.length;
+    function createPrimaryData(selector, elements){ //data is array with strings
+        const startDeg = selector.dataset.startDeg;
+        return {
+            startDeg: startDeg,
+            elementsAmount: elements.length
+        }
     };
 
     function calculateCoords(primaryData, selector, elements){
@@ -81,12 +74,12 @@ export default function(containerSelector){
         const degToRad = deg => deg*(Math.PI / 180);
         const elementLeftProc = parseFloat(selector.dataset.childrenLeft);
         const elementTopProc = parseFloat(selector.dataset.childrenTop);
-        const parentWidth = parseFloat(getComputedStyle(selector).width);
-        const parentHeight = parseFloat(getComputedStyle(selector).height);
+        const parentWidth = selector.offsetWidth;
+        const parentHeight = selector.offsetHeight;
 
         elements.forEach((element,i) => {
-            const elementWidth = parseFloat(getComputedStyle(element).width);
-            const elementHeight = parseFloat(getComputedStyle(element).height);
+            const elementWidth = element.offsetWidth;
+            const elementHeight = element.offsetHeight;
             const offsetLeft = elementLeftProc/100 * parentWidth - elementWidth/2; //elementCornerX
             const offsetTop = elementTopProc/100 * parentHeight - elementHeight/2; //elementCornerY
             const centerX = parentWidth/2;
@@ -94,7 +87,7 @@ export default function(containerSelector){
             
             const n = primaryData.elementsAmount;
             const startRad = degToRad(primaryData.startDeg);
-            const R = primaryData.radius;
+            const R = parentWidth/2 * 0.7;
             const targetCenterX = centerX + (R * Math.cos(startRad + (2*Math.PI/n) * i)); 
             const targetCenterY = Math.abs(-centerY + (R * Math.sin(startRad + (2*Math.PI/n) * i)));
             const targetCornerX = targetCenterX - elementWidth/2;
@@ -118,6 +111,7 @@ export default function(containerSelector){
                 flag: false
             });
         });
+        roundData(result);
         return result;
     };
 
@@ -125,7 +119,7 @@ export default function(containerSelector){
         for(let value of arrOfObjects){
             for(let key in value){
                 if(typeof value[key] == 'number'){
-                    value[key] = (Math.round(value[key]*100)/100)
+                    value[key] = (Math.round(value[key]*1000)/1000)
                 };
             };
         };  
@@ -157,6 +151,25 @@ export default function(containerSelector){
                 obj[elementCoord] -= obj[step];
                 obj.element.style[side] = `${obj[elementCoord]}px`;
             };
+        };
+    };
+
+    function createResponseDesign(){
+        let currentWidth = selector.offsetWidth;
+
+        window.addEventListener('resize', () => {
+            if(currentWidth !== selector.offsetWidth){
+                currentWidth = selector.offsetWidth
+                elementsData = calculateCoords(primaryData, selector, elements);
+                correctStartCoords(elementsData);
+            };
+        });
+
+        function correctStartCoords(elementsData){
+            elementsData.forEach(obj => {
+                obj.element.style.left = obj.elementCornerX + 'px';
+                obj.element.style.top = obj.elementCornerY + 'px';
+            });
         };
     };
 };
