@@ -7,6 +7,7 @@ export default function(containerSelector){
 
     const primaryData = createPrimaryData(selector, elements); // creats object which contains initialization data
     let elementsData = calculateCoords(primaryData, selector, elements); // obj with element, target coords, element coords and other necessary data
+    correctStartCoords(elementsData);
     createResponseDesign();
 
     const flags = {
@@ -57,17 +58,21 @@ export default function(containerSelector){
 
     function createPrimaryData(selector, elements){ //data is array with strings
         const startDeg = selector.dataset.startDeg;
+        const childrenLeft = parseFloat(selector.dataset.childrenLeft);
+        const childrenTop = parseFloat(selector.dataset.childrenTop);
         return {
             startDeg: startDeg,
-            elementsAmount: elements.length
+            elementsAmount: elements.length,
+            childrenLeft: childrenLeft,
+            childrenTop: childrenTop
         }
     };
 
     function calculateCoords(primaryData, selector, elements){
         const result = [];
         const degToRad = deg => deg*(Math.PI / 180);
-        const elementLeftProc = parseFloat(selector.dataset.childrenLeft);
-        const elementTopProc = parseFloat(selector.dataset.childrenTop);
+        const elementLeftProc = primaryData.childrenLeft;
+        const elementTopProc = primaryData.childrenTop;
         const parentWidth = selector.offsetWidth;
         const parentHeight = selector.offsetHeight;
 
@@ -86,9 +91,6 @@ export default function(containerSelector){
             const targetCenterY = Math.abs(-centerY + (R * Math.sin(startRad + (2*Math.PI/n) * i)));
             const targetCornerX = targetCenterX - elementWidth/2;
             const targetCornerY = targetCenterY - elementHeight/2;
-
-            const diffX = Math.abs(targetCornerX - offsetLeft);
-            const diffY = Math.abs(targetCornerY - offsetTop);
 
             result.push({
                 element: element,
@@ -196,12 +198,15 @@ export default function(containerSelector){
                 correctStartCoords(elementsData);
             };
         });
-
-        function correctStartCoords(elementsData){
-            elementsData.forEach(obj => {
-                obj.element.style.left = obj.elementCornerX + 'px';
-                obj.element.style.top = obj.elementCornerY + 'px';
-            });
-        };
     };
+
+    function correctStartCoords(elementsData){
+        elementsData.forEach(obj => {
+            selectorActivator.style.left = obj.elementCornerX + 'px';
+            selectorActivator.style.top = obj.elementCornerY + 'px';
+            obj.element.style.left = obj.elementCornerX + 'px';
+            obj.element.style.top = obj.elementCornerY + 'px';
+        });
+    };
+
 };
