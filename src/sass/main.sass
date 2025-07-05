@@ -8,16 +8,20 @@
 
 
 .circle-selector
-    display: flex
-    justify-content: center
-    align-items: center
     position: relative
     width: 800px
     height: 800px
-    border: 1px solid black
+    display: flex
+    justify-content: center
+    align-items: center
     &__activator
-        border-radius: 20%
+        position: absolute
         z-index: 1000
+        background: rgba(0,0,0,0.4)
+        display: flex
+        justify-content: center
+        align-items: center
+        color: #fff
     &__element
         border-radius: 50%
         position: absolute
@@ -37,8 +41,8 @@
         width: 600px
         height: 600px
         &__activator, &__element
-            width: 119px
-            height: 170px
+            width: 19.83%
+            height: 28.33%
 
 
 @media(max-width: 992px)
@@ -46,8 +50,8 @@
         width: 500px
         height: 500px
         &__activator, &__element
-            width: 105px
-            height: 150px
+            width: 21%
+            height: 30%
         
 
 
@@ -56,8 +60,8 @@
         width: 350px
         height: 350px
         &__activator, &__element
-            width: 70px
-            height: 100px
+            width: 20%
+            height: 28.57%
         
 
 
@@ -66,7 +70,7 @@
         width: 300px
         height: 300px
         &__activator, &__element
-            width: 49px
-            height: 70px
+            width: 16.33%
+            height: 23.33%
         
         

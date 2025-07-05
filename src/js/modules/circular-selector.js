@@ -8,7 +8,7 @@ export default function(containerSelector){
     const primaryData = createPrimaryData(selector, elements); // creats object which contains initialization data
     let elementsData = calculateCoords(primaryData, selector, elements); // obj with element, target coords, element coords and other necessary data
     createResponseDesign();
-    
+
     const flags = {
         animationOutRunning: false, // A flag used to track whether the element MOVING OUT animation is currently running 
         animationInRunning: false // A flag used to track whether the element MOVING IN animation is currently running
@@ -26,7 +26,7 @@ export default function(containerSelector){
         'animationOutRunning', 
         'animationInRunning', 
         () => {
-        moveItems(elementsData, 'targetCorner', 'animationOut')
+            moveItems(elementsData, 'targetCorner', 'animationOut')
     });
     lookEvent(selector, 
         'mouseleave', 
@@ -40,7 +40,7 @@ export default function(containerSelector){
         'animationOutRunning', 
         'animationInRunning', 
         () => {
-        moveItems(elementsData, 'targetCorner', 'animationOut')
+            moveItems(elementsData, 'targetCorner', 'animationOut')
     });
 
     //functions    
@@ -50,13 +50,7 @@ export default function(containerSelector){
             flags[secondaryAnimationFlag] = false;
             if(!flags[primaryAnimationFlag] && !flags[secondaryAnimationFlag]){
                 flags[primaryAnimationFlag] = true;
-                function step(){
-                    if(flags[primaryAnimationFlag]){                   
-                        primaryFunction(elementsData);
-                        requestAnimationFrame(step);
-                    };
-                };
-                step();
+                primaryFunction();
             };
         });
     };
@@ -95,8 +89,6 @@ export default function(containerSelector){
 
             const diffX = Math.abs(targetCornerX - offsetLeft);
             const diffY = Math.abs(targetCornerY - offsetTop);
-            const stepX = diffX/60;
-            const stepY = diffY/60;
 
             result.push({
                 element: element,
@@ -105,10 +97,7 @@ export default function(containerSelector){
                 targetCornerX: targetCornerX,
                 targetCornerY: targetCornerY,
                 initElementCornerX: offsetLeft,
-                initElementCornerY: offsetTop,
-                stepX: stepX,
-                stepY: stepY,
-                flag: false
+                initElementCornerY: offsetTop
             });
         });
         roundData(result);
@@ -126,33 +115,76 @@ export default function(containerSelector){
     };
 
     function moveItems(elementsData, target, animationName){
-        elementsData.forEach(obj => {
-            changeCoordinate(obj, 'elementCornerX', `${target}X`, 'stepX', 'left');
-            changeCoordinate(obj, 'elementCornerY', `${target}Y`, 'stepY', 'top');
-            if(
-                Math.abs(obj.elementCornerX - obj[`${target}X`]) < 1 &&
-                Math.abs(obj.elementCornerY - obj[`${target}Y`]) < 1 
-            ){
-                obj.flag = true;
-            };
-        });
-        if(elementsData.every(obj => obj.flag)){
-            flags[`${animationName}Running`] = false;
-            elementsData.forEach(obj => obj.flag = false)
-        };
-    }
+        const start = performance.now();
+        const duration = 1000;
 
-    function changeCoordinate(obj, elementCoord, targetCoord, step, side){
-        if(obj[elementCoord] !== obj[targetCoord]){
-            if(obj[elementCoord] < obj[targetCoord]){
-                obj[elementCoord] += obj[step];
-                obj.element.style[side] = `${obj[elementCoord]}px`;
-            }else if(obj[elementCoord] > obj[targetCoord]){
-                obj[elementCoord] -= obj[step];
-                obj.element.style[side] = `${obj[elementCoord]}px`;
+        elementsData.forEach(obj => {
+            obj.startX = obj.elementCornerX;
+            obj.startY = obj.elementCornerY;
+        });
+
+        function animate() {
+            const now = performance.now();
+            const delta = now - start;
+            const t = Math.min(delta / duration, 1);
+
+            elementsData.forEach(obj => {
+                changeCoordinate(obj, 'startX', 'elementCornerX', `${target}X`, t, 'left');
+                changeCoordinate(obj, 'startY', 'elementCornerY', `${target}Y`, t, 'top');
+            });
+
+            if (delta < duration) {
+                requestAnimationFrame(animate);
+            } else {
+                flags[`${animationName}Running`] = false;
             };
         };
+        animate();
     };
+
+    function changeCoordinate(obj, startCoord, elementCoord, targetCoord, t, side) {
+        let progress;
+
+        switch (selector.dataset.timingFunc) {
+            case 'linear':
+                progress = t;
+                break;
+            case 'easeInQuad':
+                progress = t ** 2;
+                break;
+            case 'easeOutQuad':
+                progress = t * (2-t);
+                break;
+            case 'easeInOutQuad':
+                progress = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                break;
+            case 'easeInCubic':
+                progress = t ** 3;
+                break;
+            case 'easeOutCubic':
+                progress = 1 - (1 - t) ** 3;
+                break;
+            case 'easeInOutCubic':
+                progress = t < 0.5 ? 4 * t ** 3 : 1 - 4 * (1 - t) ** 3;
+                break;
+            case 'easeInQuart':
+                progress = t ** 4;
+                break;
+            case 'easeOutQuart':
+                progress = 1 - (1 - t) ** 4;
+                break;
+            case 'easeInOutQuart':
+                progress = t < 0.5 ? 8 * t ** 4 : 1 - 8 * (1 - t) ** 4;
+                break;
+            default:
+                progress = t;
+        }
+
+        const distance = obj[targetCoord] - obj[startCoord];
+
+        obj[elementCoord] = obj[startCoord] + distance * progress;
+        obj.element.style[side] = `${obj[elementCoord]}px`;
+    }
 
     function createResponseDesign(){
         let currentWidth = selector.offsetWidth;
