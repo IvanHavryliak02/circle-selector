@@ -1,10 +1,10 @@
 
 export default function(containerSelector){
     // Execution code: Initialize all needed elements and set up event listeners
-    const selector = document.querySelector(containerSelector); // Main container element for the selector
-    const selectorActivator = selector.querySelector(`${containerSelector}__activator`); // Element that triggers unfolding/interaction
-    const elements = selector.querySelectorAll(`${containerSelector}__element`); // Radial menu items (cards, links, images etc.)
-    const background = selector.querySelector(`${containerSelector}__background`) // SVG background for drawing connecting lines
+    const selector = document.querySelector(containerSelector), // Main container element for the selector
+          selectorActivator = selector.querySelector(`${containerSelector}__activator`), // Element that triggers unfolding/interaction
+          elements = selector.querySelectorAll(`${containerSelector}__element`), // Radial menu items (cards, links, images etc.)
+          background = selector.querySelector(`${containerSelector}__background`); // SVG background for drawing connecting lines
 
     const primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
     let elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
@@ -61,9 +61,9 @@ export default function(containerSelector){
 
     // Extract initial configuration data from selector element's data attributes
     function createPrimaryData(selector, elements){
-        const startDeg = selector.dataset.startDeg;  // Starting rotation angle for radial layout
-        const childrenLeft = parseFloat(selector.dataset.childrenLeft); // Left offset % to children center
-        const childrenTop = parseFloat(selector.dataset.childrenTop); // Top offset % to children center
+        const startDeg = selector.dataset.startDeg,  // Starting rotation angle for radial layout
+              childrenLeft = parseFloat(selector.dataset.childrenLeft), // Left offset % to children center
+              childrenTop = parseFloat(selector.dataset.childrenTop); // Top offset % to children center
         return { 
             startDeg: startDeg,
             elementsAmount: elements.length,
@@ -73,33 +73,33 @@ export default function(containerSelector){
     };
     // Calculate positions for each menu item for both initial and target (expanded) states
     function calculateCoords(primaryData, selector, elements){
-        const result = []; 
-        const degToRad = deg => deg*(Math.PI / 180); 
-        const elementLeftProc = primaryData.childrenLeft;
-        const elementTopProc = primaryData.childrenTop;
-        const parentWidth = selector.offsetWidth; 
-        const parentHeight = selector.offsetHeight; 
-        const activatorWidth = selectorActivator.offsetWidth;
-        const activatorHeight = selectorActivator.offsetHeight; 
+        const result = [], 
+              degToRad = deg => deg*(Math.PI / 180), 
+              elementLeftProc = primaryData.childrenLeft,
+              elementTopProc = primaryData.childrenTop,
+              parentWidth = selector.offsetWidth,
+              parentHeight = selector.offsetHeight, 
+              activatorWidth = selectorActivator.offsetWidth,
+              activatorHeight = selectorActivator.offsetHeight; 
 
         elements.forEach((element,i) => { //element means menu item
-            const elementWidth = element.offsetWidth; 
-            const elementHeight = element.offsetHeight;
+            const elementWidth = element.offsetWidth, 
+                  elementHeight = element.offsetHeight;
             // Initial position relative to container based on % offset minus half element size (to center) 
-            const offsetLeft = elementLeftProc/100 * parentWidth - elementWidth/2; 
-            const offsetTop = elementTopProc/100 * parentHeight - elementHeight/2;
-            const centerX = parentWidth/2; 
-            const centerY = parentHeight/2; 
-            
-            const n = primaryData.elementsAmount; 
-            const startRad = degToRad(primaryData.startDeg); 
-            const R = parentWidth/2 * 0.8; // Radius of circle on which elements will be positioned
+            const offsetLeft = elementLeftProc/100 * parentWidth - elementWidth/2, 
+                  offsetTop = elementTopProc/100 * parentHeight - elementHeight/2,
+                  centerX = parentWidth/2, 
+                  centerY = parentHeight/2; 
+    
+            const n = primaryData.elementsAmount, 
+                  startRad = degToRad(primaryData.startDeg), 
+                  R = parentWidth/2 * 0.8; // Radius of circle on which elements will be positioned
             // Calculate target position on circumference of circle for each element
-            const targetCenterX = centerX + (R * Math.cos(startRad + (2*Math.PI/n) * i)); 
-            const targetCenterY = Math.abs(-centerY + (R * Math.sin(startRad + (2*Math.PI/n) * i))); 
+            const targetCenterX = centerX + (R * Math.cos(startRad + (2*Math.PI/n) * i)), 
+                  targetCenterY = Math.abs(-centerY + (R * Math.sin(startRad + (2*Math.PI/n) * i))); 
             // Convert center coordinates to top-left corner coordinates for absolute positioning
-            const targetCornerX = targetCenterX - elementWidth/2; 
-            const targetCornerY = targetCenterY - elementHeight/2; 
+            const targetCornerX = targetCenterX - elementWidth/2, 
+                  targetCornerY = targetCenterY - elementHeight/2; 
             // Store all relevant data for animation and positioning
             result.push({
                 element: element, 
@@ -134,17 +134,17 @@ export default function(containerSelector){
 
     // Animate movement of menu items from current position to target or initial position
     function moveItems(elementsData, target, animationName){
-        const start = performance.now();
-        const duration = parseInt(selector.dataset.animationDuration);
+        const start = performance.now(),
+              duration = parseInt(selector.dataset.animationDuration);
 
         elementsData.forEach(obj => {
             obj.startX = obj.elementCornerX; // Save current position as animation start
             obj.startY = obj.elementCornerY;
         });
         function animate() {
-            const now = performance.now();
-            const delta = now - start;
-            const t = Math.min(delta / duration, 1);
+            const now = performance.now(),
+                  delta = now - start,
+                  t = Math.min(delta / duration, 1);
             removeLines();
 
             elementsData.forEach(obj => {
@@ -170,12 +170,12 @@ export default function(containerSelector){
               elementCenterX = obj.elementCornerX + obj.elementWidth/2,
               elementCenterY = obj.elementCornerY + obj.elementHeight/2,
               dx = elementCenterX - obj.activatorCenterX,
-              dy = elementCenterY - obj.activatorCenterY;
+              dy = elementCenterY - obj.activatorCenterY,
+              len = Math.sqrt(dx**2 + dy**2);
         if(len <= 0.01){ // Skip if length is too small
             return
         } 
-        const len = Math.sqrt(dx**2 + dy**2),
-              ux = dx/len, uy = dy/len,
+        const ux = dx/len, uy = dy/len,
               activatorR = Math.sqrt(obj.activatorWidth**2 + obj.activatorHeight**2)/2,
               elementR = Math.sqrt(obj.elementWidth**2 + obj.elementHeight**2)/2,
               x1 = obj.activatorCenterX + ux*activatorR,
