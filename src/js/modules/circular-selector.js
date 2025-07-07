@@ -4,7 +4,7 @@ export default function(containerSelector){
     const selector = document.querySelector(containerSelector); // Contains selector body
     const selectorActivator = selector.querySelector(`${containerSelector}__activator`); // Contains element which when hovered over, triggers the expansion of the entire radial menu, selector trigger
     const elements = selector.querySelectorAll(`${containerSelector}__element`); // Cards, links, images - whatever else you want to arrange the radial menu in a circular layout
-    const background = selector.querySelector(`${containerSelector}__background`)
+    const background = selector.querySelector(`${containerSelector}__background`) // SVG background for drawing lines
 
     const primaryData = createPrimaryData(selector, elements); // creats object which contains initialization data
     let elementsData = calculateCoords(primaryData, selector, elements); // obj with element, target coords, element coords and other necessary data
@@ -18,7 +18,7 @@ export default function(containerSelector){
     
     selector.addEventListener('click', (e) => { 
         if(e.target.closest(`${containerSelector}__element`)){ // When one of the cards is clicked
-            console.log('TEST: Card is clicked!'); // Test code, can be removed
+            alert('TEST: Card is clicked!'); // Test code, can be removed
             // Your code
         };
     });
@@ -61,15 +61,11 @@ export default function(containerSelector){
         const startDeg = selector.dataset.startDeg;
         const childrenLeft = parseFloat(selector.dataset.childrenLeft);
         const childrenTop = parseFloat(selector.dataset.childrenTop);
-        const activatorWidth = selectorActivator.offsetWidth;
-        const activatorHeight = selectorActivator.offsetHeight;
         return {
             startDeg: startDeg,
             elementsAmount: elements.length,
             childrenLeft: childrenLeft,
             childrenTop: childrenTop,
-            activatorWidth: activatorWidth,
-            activatorHeight: activatorHeight
         }
     };
 
@@ -93,7 +89,7 @@ export default function(containerSelector){
             
             const n = primaryData.elementsAmount;
             const startRad = degToRad(primaryData.startDeg);
-            const R = parentWidth/2 * 0.7;
+            const R = parentWidth/2 * 0.8;
             const targetCenterX = centerX + (R * Math.cos(startRad + (2*Math.PI/n) * i)); 
             const targetCenterY = Math.abs(-centerY + (R * Math.sin(startRad + (2*Math.PI/n) * i)));
             const targetCornerX = targetCenterX - elementWidth/2;
@@ -131,7 +127,7 @@ export default function(containerSelector){
 
     function moveItems(elementsData, target, animationName){
         const start = performance.now();
-        const duration = 1000; // make selector parametr
+        const duration = parseInt(selector.dataset.animationDuration);
 
         elementsData.forEach(obj => {
             obj.startX = obj.elementCornerX;
