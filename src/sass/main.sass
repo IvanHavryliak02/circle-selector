@@ -1,4 +1,12 @@
 
+@font-face
+  font-family: 'MontserratM'
+  src: url('./fonts/Montserrat-Medium.ttf') format('truetype')
+
+*
+    font-family: MontserratM
+
+    
 .container
     display: flex
     justify-content: center
@@ -19,6 +27,7 @@
         color: #000
         border-radius: 3%
         text-align: center
+        text-transform: uppercase
     &__element
         position: absolute
         object-fit: cover
@@ -31,6 +40,13 @@
     &__activator, &__element
         width: 140px
         height: 200px
+    &__background
+        position: absolute
+        width: 100%
+        height: 100%
+        top: 0
+        left: 0
+        z-index: -1000
 
 @media(max-width: 1200px)
     .circle-selector

@@ -4,6 +4,7 @@ export default function(containerSelector){
     const selector = document.querySelector(containerSelector); // Contains selector body
     const selectorActivator = selector.querySelector(`${containerSelector}__activator`); // Contains element which when hovered over, triggers the expansion of the entire radial menu, selector trigger
     const elements = selector.querySelectorAll(`${containerSelector}__element`); // Cards, links, images - whatever else you want to arrange the radial menu in a circular layout
+    const background = selector.querySelector(`${containerSelector}__background`)
 
     const primaryData = createPrimaryData(selector, elements); // creats object which contains initialization data
     let elementsData = calculateCoords(primaryData, selector, elements); // obj with element, target coords, element coords and other necessary data
@@ -60,11 +61,15 @@ export default function(containerSelector){
         const startDeg = selector.dataset.startDeg;
         const childrenLeft = parseFloat(selector.dataset.childrenLeft);
         const childrenTop = parseFloat(selector.dataset.childrenTop);
+        const activatorWidth = selectorActivator.offsetWidth;
+        const activatorHeight = selectorActivator.offsetHeight;
         return {
             startDeg: startDeg,
             elementsAmount: elements.length,
             childrenLeft: childrenLeft,
-            childrenTop: childrenTop
+            childrenTop: childrenTop,
+            activatorWidth: activatorWidth,
+            activatorHeight: activatorHeight
         }
     };
 
@@ -75,6 +80,8 @@ export default function(containerSelector){
         const elementTopProc = primaryData.childrenTop;
         const parentWidth = selector.offsetWidth;
         const parentHeight = selector.offsetHeight;
+        const activatorWidth = selectorActivator.offsetWidth;
+        const activatorHeight = selectorActivator.offsetHeight;
 
         elements.forEach((element,i) => {
             const elementWidth = element.offsetWidth;
@@ -99,7 +106,13 @@ export default function(containerSelector){
                 targetCornerX: targetCornerX,
                 targetCornerY: targetCornerY,
                 initElementCornerX: offsetLeft,
-                initElementCornerY: offsetTop
+                initElementCornerY: offsetTop,
+                activatorCenterX: offsetLeft + activatorWidth/2,
+                activatorCenterY: offsetTop + activatorHeight/2,
+                elementWidth: elementWidth,
+                elementHeight: elementHeight,
+                activatorWidth: activatorWidth,
+                activatorHeight: activatorHeight
             });
         });
         roundData(result);
@@ -118,24 +131,27 @@ export default function(containerSelector){
 
     function moveItems(elementsData, target, animationName){
         const start = performance.now();
-        const duration = 1000;
+        const duration = 1000; // make selector parametr
 
         elementsData.forEach(obj => {
             obj.startX = obj.elementCornerX;
             obj.startY = obj.elementCornerY;
         });
-
         function animate() {
             const now = performance.now();
             const delta = now - start;
             const t = Math.min(delta / duration, 1);
+            removeLines();
 
             elementsData.forEach(obj => {
                 changeCoordinate(obj, 'startX', 'elementCornerX', `${target}X`, t, 'left');
                 changeCoordinate(obj, 'startY', 'elementCornerY', `${target}Y`, t, 'top');
+                if(background.dataset.lines === 'show'){
+                    drawLines(obj);
+                }
             });
 
-            if (delta < duration) {
+            if (delta < duration && flags[`${animationName}Running`]) {
                 requestAnimationFrame(animate);
             } else {
                 flags[`${animationName}Running`] = false;
@@ -143,6 +159,41 @@ export default function(containerSelector){
         };
         animate();
     };
+
+    function drawLines(obj){
+        const color = background.dataset.lineColor,
+              elementCenterX = obj.elementCornerX + obj.elementWidth/2,
+              elementCenterY = obj.elementCornerY + obj.elementHeight/2,
+              dx = elementCenterX - obj.activatorCenterX,
+              dy = elementCenterY - obj.activatorCenterY,
+              len = Math.sqrt(dx**2 + dy**2);
+              let x1,x2,y1,y2;
+            if(len >= 0.1){
+                const ux = dx/len, uy = dy/len,
+                activatorR = Math.sqrt(obj.activatorWidth**2 + obj.activatorHeight**2)/2,
+                elementR = Math.sqrt(obj.elementWidth**2 + obj.elementHeight**2)/2;
+
+                x1 = obj.activatorCenterX + ux*activatorR;
+                y1 = obj.activatorCenterY + uy*activatorR;
+                x2 = elementCenterX - ux*elementR;
+                y2 = elementCenterY - uy*elementR;  
+            }else{
+                return
+            }
+            background.innerHTML +=`
+            <line 
+                x1='${x1}' 
+                y1='${y1}' 
+                x2='${x2}' 
+                y2='${y2}' 
+                stroke='${color}
+            '/>
+        `
+    };
+
+    function removeLines(){
+        background.innerHTML = '';
+    }
 
     function changeCoordinate(obj, startCoord, elementCoord, targetCoord, t, side) {
         let progress;
@@ -196,14 +247,15 @@ export default function(containerSelector){
                 currentWidth = selector.offsetWidth
                 elementsData = calculateCoords(primaryData, selector, elements);
                 correctStartCoords(elementsData);
+                removeLines();
             };
         });
     };
 
     function correctStartCoords(elementsData){
+        selectorActivator.style.left = elementsData[0].elementCornerX + 'px';
+        selectorActivator.style.top = elementsData[0].elementCornerY + 'px';
         elementsData.forEach(obj => {
-            selectorActivator.style.left = obj.elementCornerX + 'px';
-            selectorActivator.style.top = obj.elementCornerY + 'px';
             obj.element.style.left = obj.elementCornerX + 'px';
             obj.element.style.top = obj.elementCornerY + 'px';
         });
