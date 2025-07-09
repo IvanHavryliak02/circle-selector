@@ -5,7 +5,7 @@ export default function(containerSelector){
           selectorActivator = selector.querySelector(`${containerSelector}__activator`), // Element that triggers unfolding/interaction
           elements = selector.querySelectorAll(`${containerSelector}__element`), // Radial menu items (cards, links, images etc.)
           background = selector.querySelector(`${containerSelector}__background`); // SVG background for drawing connecting lines
-          let primaryData, elementsData, activator;
+    let primaryData, elementsData, activator;
 
         primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
         elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
@@ -53,7 +53,8 @@ export default function(containerSelector){
     // Utility function to add event listener and control animation flags to prevent collisions
     function lookEvent(element, event, primaryAnimationFlag, secondaryAnimationFlag, primaryFunction){
         element.addEventListener(event, (e) => {
-            e.stopPropagation();
+            console.log(`Event ${event} is started!`)
+            e.stopPropagation;
             flags[secondaryAnimationFlag] = false; //Stops the secondary animation if it's running
             if(!flags[primaryAnimationFlag] && !flags[secondaryAnimationFlag]){ // If neither animation is running
                 flags[primaryAnimationFlag] = true; // Allows animation to run, prevents animation collisions
@@ -76,6 +77,7 @@ export default function(containerSelector){
     };
     // Calculate positions for each menu item for both initial and target (expanded) states
     function calculateCoords(primaryData, selector, elements){
+        console.log(`Coords calculation`);
         const result = [], 
               degToRad = deg => deg*(Math.PI / 180), 
               elementLeftProc = primaryData.childrenLeft,
@@ -188,10 +190,12 @@ export default function(containerSelector){
                 stroke='${color}
             '/>
         `
+        console.log(`Lines drawn`)
     };
 
     // Clear all SVG lines from background
     function removeLines(){
+        console.log(`Removing lines`)
         background.innerHTML = '';
     }
 
@@ -243,11 +247,14 @@ export default function(containerSelector){
     // Add resize listener to recalculate positions if container size changes
     function createResponseDesign(){
         let currentWidth = selector.offsetWidth,
-            timeoutId;
+            timeoutId, i = 0;
 
         window.addEventListener('resize', () => {
             clearTimeout(timeoutId);
             if(currentWidth !== selector.offsetWidth){
+                flags.animationInRunning = false;
+                flags.animationOutRunning = false;
+                console.log(`setting timeout ${++i}`)
                 timeoutId = setTimeout(() => {
                     requestAnimationFrame(() => {
                         currentWidth = selector.offsetWidth;
@@ -262,6 +269,7 @@ export default function(containerSelector){
 
     // Apply initial positions to activator and menu items based on calculated data
     function startCoordsCorrection(elementsData){
+        console.log(`Coords correcting`);
         let minX = elementsData[0].elementCornerX,
             minY = elementsData[0].elementCornerY,
             ordNum = 0;
@@ -280,9 +288,12 @@ export default function(containerSelector){
         selectorActivator.style.left = minX + 'px';
         selectorActivator.style.top = minY + 'px';
         selectorActivator.style.height = elementsData[ordNum].elementHeight;
+        console.log(`Correcting finished`)
         activator = getActivatorParams(selectorActivator, minX, minY);
     };
+
     function getActivatorParams(activator, activatorCornerX, activatorCornerY){
+        console.log(`Creating activator params`);
         const activatorWidth = activator.offsetWidth,
               activatorHeight = activator.offsetHeight,
               activatorCenterX = activatorCornerX + activatorWidth/2,
@@ -292,6 +303,6 @@ export default function(containerSelector){
             activatorHeight: activatorHeight,
             activatorCenterX: activatorCenterX,
             activatorCenterY: activatorCenterY
-        }
-    }
+        };
+    };
 };
