@@ -5,11 +5,13 @@ export default function(containerSelector){
           selectorActivator = selector.querySelector(`${containerSelector}__activator`), // Element that triggers unfolding/interaction
           elements = selector.querySelectorAll(`${containerSelector}__element`), // Radial menu items (cards, links, images etc.)
           background = selector.querySelector(`${containerSelector}__background`); // SVG background for drawing connecting lines
+          let primaryData, elementsData;
 
-    const primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
-    let elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
-    correctStartCoords(elementsData); // Position all elements at their starting coordinates
-    createResponseDesign(); // Set up resize listener to recalculate coords if container size changes
+        primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
+        elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
+        
+        startCoordsCorrection(elementsData); // Position all elements at their starting coordinates
+        createResponseDesign(); // Set up resize listener to recalculate coords if container size changes
 
     const flags = {
         animationOutRunning: false, // Tracks if "unfold" animation is currently running
@@ -52,8 +54,6 @@ export default function(containerSelector){
     function lookEvent(element, event, primaryAnimationFlag, secondaryAnimationFlag, primaryFunction){
         element.addEventListener(event, (e) => {
             e.stopPropagation();
-            console.log(`${event} at`);
-            console.log(e.target)
             flags[secondaryAnimationFlag] = false; //Stops the secondary animation if it's running
             if(!flags[primaryAnimationFlag] && !flags[secondaryAnimationFlag]){ // If neither animation is running
                 flags[primaryAnimationFlag] = true; // Allows animation to run, prevents animation collisions
@@ -248,26 +248,41 @@ export default function(containerSelector){
 
     // Add resize listener to recalculate positions if container size changes
     function createResponseDesign(){
-        let currentWidth = selector.offsetWidth;
+        let currentWidth = selector.offsetWidth,
+            timeoutId;
 
         window.addEventListener('resize', () => {
+            clearTimeout(timeoutId);
             if(currentWidth !== selector.offsetWidth){
-                currentWidth = selector.offsetWidth
-                elementsData = calculateCoords(primaryData, selector, elements);
-                correctStartCoords(elementsData);
-                removeLines();
+                timeoutId = setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        currentWidth = selector.offsetWidth;
+                        elementsData = calculateCoords(primaryData, selector, elements);
+                        startCoordsCorrection(elementsData);
+                        removeLines();
+                    })
+                }, 100)
             };
         });
     };
 
     // Apply initial positions to activator and menu items based on calculated data
-    function correctStartCoords(elementsData){
-        selectorActivator.style.left = elementsData[0].elementCornerX + 'px';
-        selectorActivator.style.top = elementsData[0].elementCornerY + 'px';
-        elementsData.forEach(obj => {
-            obj.element.style.left = obj.elementCornerX + 'px';
-            obj.element.style.top = obj.elementCornerY + 'px';
-        });
+    function startCoordsCorrection(elementsData){
+        let minX = elementsData[0].elementCornerX,
+            minY = elementsData[0].elementCornerY;
+
+        elementsData.forEach((obj) => {
+            const menuItem = obj.element;              
+            menuItem.style.left = obj.elementCornerX + 'px';
+            menuItem.style.top = obj.elementCornerY + 'px';
+            if(obj.elementCornerX < minX || obj.elementCornerY < minY){
+                minX = obj.elementCornerX;
+                minY = obj.elementCornerY;
+            }
+        })
+
+        selectorActivator.style.left = minX + 'px';
+        selectorActivator.style.top = minY + 'px';
     };
 
 };
