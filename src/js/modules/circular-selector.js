@@ -5,7 +5,7 @@ export default function(containerSelector){
           selectorActivator = selector.querySelector(`${containerSelector}__activator`), // Element that triggers unfolding/interaction
           elements = selector.querySelectorAll(`${containerSelector}__element`), // Radial menu items (cards, links, images etc.)
           background = selector.querySelector(`${containerSelector}__background`); // SVG background for drawing connecting lines
-          let primaryData, elementsData;
+          let primaryData, elementsData, activator;
 
         primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
         elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
@@ -17,7 +17,7 @@ export default function(containerSelector){
         animationOutRunning: false, // Tracks if "unfold" animation is currently running
         animationInRunning: false // Tracks if "fold back" animation is currently running
     }
-    
+
     selector.addEventListener('click', (e) => {
         e.stopPropagation(); 
         if(e.target.closest(`${containerSelector}__element`)){ // Detect click on any menu item
@@ -81,16 +81,14 @@ export default function(containerSelector){
               elementLeftProc = primaryData.childrenLeft,
               elementTopProc = primaryData.childrenTop,
               parentWidth = selector.offsetWidth,
-              parentHeight = selector.offsetHeight, 
-              activatorWidth = selectorActivator.offsetWidth,
-              activatorHeight = selectorActivator.offsetHeight; 
+              parentHeight = selector.offsetHeight;
 
         elements.forEach((element,i) => { //element means menu item
             const elementWidth = element.offsetWidth, 
                   elementHeight = element.offsetHeight;
             // Initial position relative to container based on % offset minus half element size (to center) 
-            const offsetLeft = elementLeftProc/100 * parentWidth - elementWidth/2, 
-                  offsetTop = elementTopProc/100 * parentHeight - elementHeight/2,
+            const elementCornerX = elementLeftProc/100 * parentWidth - elementWidth/2, 
+                  elementCornerY = elementTopProc/100 * parentHeight - elementHeight/2,
                   centerX = parentWidth/2, 
                   centerY = parentHeight/2; 
     
@@ -106,18 +104,14 @@ export default function(containerSelector){
             // Store all relevant data for animation and positioning
             result.push({
                 element: element, 
-                elementCornerX: offsetLeft, 
-                elementCornerY: offsetTop, 
+                elementCornerX: elementCornerX, 
+                elementCornerY: elementCornerY, 
                 targetCornerX: targetCornerX,
                 targetCornerY: targetCornerY, 
-                initElementCornerX: offsetLeft, 
-                initElementCornerY: offsetTop, 
-                activatorCenterX: offsetLeft + activatorWidth/2, 
-                activatorCenterY: offsetTop + activatorHeight/2,
+                initElementCornerX: elementCornerX, 
+                initElementCornerY: elementCornerY, 
                 elementWidth: elementWidth,
                 elementHeight: elementHeight,
-                activatorWidth: activatorWidth,
-                activatorHeight: activatorHeight
             });
         });
         roundData(result); // Round numeric values for precision
@@ -172,17 +166,17 @@ export default function(containerSelector){
         const color = background.dataset.lineColor,
               elementCenterX = obj.elementCornerX + obj.elementWidth/2,
               elementCenterY = obj.elementCornerY + obj.elementHeight/2,
-              dx = elementCenterX - obj.activatorCenterX,
-              dy = elementCenterY - obj.activatorCenterY,
+              dx = elementCenterX - activator.activatorCenterX,
+              dy = elementCenterY - activator.activatorCenterY,
               len = Math.sqrt(dx**2 + dy**2),
-              activatorR = Math.sqrt(obj.activatorWidth**2 + obj.activatorHeight**2)/2;
+              activatorR = Math.sqrt(activator.activatorWidth**2 + activator.activatorHeight**2)/2;
         if(len <= activatorR){ // Skip if line must be in activator
             return
         } 
         const ux = dx/len, uy = dy/len,
               elementR = Math.sqrt(obj.elementWidth**2 + obj.elementHeight**2)/2,
-              x1 = obj.activatorCenterX + ux*activatorR,
-              y1 = obj.activatorCenterY + uy*activatorR,
+              x1 = activator.activatorCenterX + ux*activatorR,
+              y1 = activator.activatorCenterY + uy*activatorR,
               x2 = elementCenterX - ux*elementR,
               y2 = elementCenterY - uy*elementR; 
         background.innerHTML +=`
@@ -269,20 +263,35 @@ export default function(containerSelector){
     // Apply initial positions to activator and menu items based on calculated data
     function startCoordsCorrection(elementsData){
         let minX = elementsData[0].elementCornerX,
-            minY = elementsData[0].elementCornerY;
+            minY = elementsData[0].elementCornerY,
+            ordNum = 0;
 
-        elementsData.forEach((obj) => {
+        elementsData.forEach((obj,i) => {
             const menuItem = obj.element;              
             menuItem.style.left = obj.elementCornerX + 'px';
             menuItem.style.top = obj.elementCornerY + 'px';
             if(obj.elementCornerX < minX || obj.elementCornerY < minY){
                 minX = obj.elementCornerX;
                 minY = obj.elementCornerY;
+                ordNum = i;
             }
-        })
+        });
 
         selectorActivator.style.left = minX + 'px';
         selectorActivator.style.top = minY + 'px';
+        selectorActivator.style.height = elementsData[ordNum].elementHeight;
+        activator = getActivatorParams(selectorActivator, minX, minY);
     };
-
+    function getActivatorParams(activator, activatorCornerX, activatorCornerY){
+        const activatorWidth = activator.offsetWidth,
+              activatorHeight = activator.offsetHeight,
+              activatorCenterX = activatorCornerX + activatorWidth/2,
+              activatorCenterY = activatorCornerY + activatorHeight/2;
+        return {
+            activatorWidth: activatorWidth,
+            activatorHeight: activatorHeight,
+            activatorCenterX: activatorCenterX,
+            activatorCenterY: activatorCenterY
+        }
+    }
 };
