@@ -16,7 +16,8 @@ export default function(containerSelector){
         animationInRunning: false // Tracks if "fold back" animation is currently running
     }
     
-    selector.addEventListener('click', (e) => { 
+    selector.addEventListener('click', (e) => {
+        e.stopPropagation(); 
         if(e.target.closest(`${containerSelector}__element`)){ // Detect click on any menu item
             alert('TEST: Card is clicked!'); // Placeholder for your custom click handler
             // Add your code here
@@ -45,12 +46,14 @@ export default function(containerSelector){
         () => {
             moveItems(elementsData, 'targetCorner', 'animationOut')
     });
-
     //functions    
 
     // Utility function to add event listener and control animation flags to prevent collisions
     function lookEvent(element, event, primaryAnimationFlag, secondaryAnimationFlag, primaryFunction){
-        element.addEventListener(event, () => {
+        element.addEventListener(event, (e) => {
+            e.stopPropagation();
+            console.log(`${event} at`);
+            console.log(e.target)
             flags[secondaryAnimationFlag] = false; //Stops the secondary animation if it's running
             if(!flags[primaryAnimationFlag] && !flags[secondaryAnimationFlag]){ // If neither animation is running
                 flags[primaryAnimationFlag] = true; // Allows animation to run, prevents animation collisions
@@ -123,10 +126,10 @@ export default function(containerSelector){
 
     // Round numeric values in all objects to 3 decimal places to avoid floating point errors
     function roundData(arrOfObjects){
-        for(let value of arrOfObjects){
-            for(let key in value){
-                if(typeof value[key] == 'number'){
-                    value[key] = (Math.round(value[key]*1000)/1000)
+        for(let obj of arrOfObjects){
+            for(let key in obj){
+                if(typeof obj[key] == 'number'){
+                    obj[key] = (Math.round(obj[key]*1000)/1000)
                 };
             };
         };  
@@ -171,12 +174,12 @@ export default function(containerSelector){
               elementCenterY = obj.elementCornerY + obj.elementHeight/2,
               dx = elementCenterX - obj.activatorCenterX,
               dy = elementCenterY - obj.activatorCenterY,
-              len = Math.sqrt(dx**2 + dy**2);
-        if(len <= 0.01){ // Skip if length is too small
+              len = Math.sqrt(dx**2 + dy**2),
+              activatorR = Math.sqrt(obj.activatorWidth**2 + obj.activatorHeight**2)/2;
+        if(len <= activatorR){ // Skip if line must be in activator
             return
         } 
         const ux = dx/len, uy = dy/len,
-              activatorR = Math.sqrt(obj.activatorWidth**2 + obj.activatorHeight**2)/2,
               elementR = Math.sqrt(obj.elementWidth**2 + obj.elementHeight**2)/2,
               x1 = obj.activatorCenterX + ux*activatorR,
               y1 = obj.activatorCenterY + uy*activatorR,
