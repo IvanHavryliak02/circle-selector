@@ -9,7 +9,6 @@ export default function(containerSelector){
 
         primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
         elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
-        
         startCoordsCorrection(elementsData); // Position all elements at their starting coordinates
         createResponseDesign(); // Set up resize listener to recalculate coords if container size changes
 
@@ -50,11 +49,21 @@ export default function(containerSelector){
     });
     //functions    
 
+    function createLine(){
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        const color = background.dataset.lineColor; 
+
+        line.setAttribute("stroke", color);
+
+        background.appendChild(line);
+        return line;
+    }
+
     // Utility function to add event listener and control animation flags to prevent collisions
     function lookEvent(element, event, primaryAnimationFlag, secondaryAnimationFlag, primaryFunction){
         element.addEventListener(event, (e) => {
-            console.log(`Event ${event} is started!`)
-            e.stopPropagation;
+            console.log(`Event ${event} is started!`);
+            e.stopPropagation();
             flags[secondaryAnimationFlag] = false; //Stops the secondary animation if it's running
             if(!flags[primaryAnimationFlag] && !flags[secondaryAnimationFlag]){ // If neither animation is running
                 flags[primaryAnimationFlag] = true; // Allows animation to run, prevents animation collisions
@@ -102,7 +111,9 @@ export default function(containerSelector){
                   targetCenterY = Math.abs(-centerY + (R * Math.sin(startRad + (2*Math.PI/n) * i))); 
             // Convert center coordinates to top-left corner coordinates for absolute positioning
             const targetCornerX = targetCenterX - elementWidth/2, 
-                  targetCornerY = targetCenterY - elementHeight/2; 
+                  targetCornerY = targetCenterY - elementHeight/2;
+
+            let line = background.children[i] || createLine();
             // Store all relevant data for animation and positioning
             result.push({
                 element: element, 
@@ -114,6 +125,7 @@ export default function(containerSelector){
                 initElementCornerY: elementCornerY, 
                 elementWidth: elementWidth,
                 elementHeight: elementHeight,
+                line: line
             });
         });
         roundData(result); // Round numeric values for precision
@@ -144,7 +156,6 @@ export default function(containerSelector){
             const now = performance.now(),
                   delta = now - start,
                   t = Math.min(delta / duration, 1);
-            removeLines();
 
             elementsData.forEach(obj => {
                 changeCoordinate(obj, 'startX', 'elementCornerX', `${target}X`, t, 'left');
@@ -165,14 +176,16 @@ export default function(containerSelector){
 
     // Draw SVG lines from activator center to each menu item center
     function drawLines(obj){
-        const color = background.dataset.lineColor,
-              elementCenterX = obj.elementCornerX + obj.elementWidth/2,
+        const elementCenterX = obj.elementCornerX + obj.elementWidth/2,
               elementCenterY = obj.elementCornerY + obj.elementHeight/2,
               dx = elementCenterX - activator.activatorCenterX,
               dy = elementCenterY - activator.activatorCenterY,
               len = Math.sqrt(dx**2 + dy**2),
               activatorR = Math.sqrt(activator.activatorWidth**2 + activator.activatorHeight**2)/2;
         if(len <= activatorR){ // Skip if line must be in activator
+            if(obj.line.hasAttribute('x1')){
+                hideLines();
+            }
             return
         } 
         const ux = dx/len, uy = dy/len,
@@ -180,23 +193,24 @@ export default function(containerSelector){
               x1 = activator.activatorCenterX + ux*activatorR,
               y1 = activator.activatorCenterY + uy*activatorR,
               x2 = elementCenterX - ux*elementR,
-              y2 = elementCenterY - uy*elementR; 
-        background.innerHTML +=`
-            <line 
-                x1='${x1}' 
-                y1='${y1}' 
-                x2='${x2}' 
-                y2='${y2}' 
-                stroke='${color}
-            '/>
-        `
+              y2 = elementCenterY - uy*elementR;
+
+        obj.line.setAttribute('x1', `${x1}`);
+        obj.line.setAttribute('x2', `${x2}`);
+        obj.line.setAttribute('y1', `${y1}`);
+        obj.line.setAttribute('y2', `${y2}`);
         console.log(`Lines drawn`)
     };
 
     // Clear all SVG lines from background
-    function removeLines(){
-        console.log(`Removing lines`)
-        background.innerHTML = '';
+    function hideLines(){
+        console.log(`Hiding lines`);
+        elementsData.forEach(obj => {
+            obj.line.removeAttribute('x1');
+            obj.line.removeAttribute('x2');
+            obj.line.removeAttribute('y1');
+            obj.line.removeAttribute('y2');
+        })
     }
 
     // Interpolates element coordinate between start and target positions based on timing function
@@ -260,7 +274,7 @@ export default function(containerSelector){
                         currentWidth = selector.offsetWidth;
                         elementsData = calculateCoords(primaryData, selector, elements);
                         startCoordsCorrection(elementsData);
-                        removeLines();
+                        hideLines();
                     })
                 }, 100)
             };
