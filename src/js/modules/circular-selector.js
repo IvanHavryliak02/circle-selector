@@ -10,17 +10,20 @@ export default function(containerSelector){
     const flags = {
         animationOutRunning: false, // Tracks if "unfold" animation is currently running
         animationInRunning: false // Tracks if "fold back" animation is currently running
-    }
-
-    primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
-    elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
-    startCoordsCorrection(elementsData); // Position all elements at their starting coordinates
-    createResponseDesign(); // Set up resize listener to recalculate coords if container size changes
+    };
+    
+    setTimeout(() => {
+        requestAnimationFrame(() => {
+            primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
+            elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
+            startCoordsCorrection(elementsData); // Position all elements at their starting coordinates
+            createResponseDesign(); // Set up resize listener to recalculate coords if container size changes
+        })
+    }, 20);
 
     selector.addEventListener('click', (e) => {
         e.stopPropagation(); 
         if(e.target.closest(`${containerSelector}__element`)){ // Detect click on any menu item
-            console.log(`Event click is started at:`, e.target); 
             alert('TEST: Card is clicked!'); // Placeholder for your custom click handler
             // Add your code here
         };
@@ -91,7 +94,7 @@ export default function(containerSelector){
     function lookEvent(element, event, primaryAnimationFlag, secondaryAnimationFlag, primaryFunction){
         const handler = (e) => {
             e.stopPropagation();
-            console.log(`Event ${event} is WORKED at:`, e.target);
+            
             flags[secondaryAnimationFlag] = false; //Stops the secondary animation if it's running
             if(!flags[primaryAnimationFlag] && !flags[secondaryAnimationFlag]){ // If neither animation is running
                 flags[primaryAnimationFlag] = true; // Allows animation to run, prevents animation collisions
@@ -317,6 +320,7 @@ export default function(containerSelector){
 
     // Apply initial positions to activator and menu items based on calculated data
     function startCoordsCorrection(elementsData){
+        console.log(elementsData);
         let minX = elementsData[0].elementCornerX,
             minY = elementsData[0].elementCornerY,
             ordNum = 0;
@@ -334,7 +338,8 @@ export default function(containerSelector){
 
         selectorActivator.style.left = minX + 'px';
         selectorActivator.style.top = minY + 'px';
-        selectorActivator.style.height = elementsData[ordNum].elementHeight;
+        selectorActivator.style.height = elementsData[ordNum].elementHeight + 'px';
+        elementsData[ordNum].element.style.zIndex = +getComputedStyle(elementsData[ordNum].element).zIndex + 1;
         activator = getActivatorParams(selectorActivator, minX, minY);
     };
 
