@@ -7,46 +7,27 @@ export default function(containerSelector){
           background = selector.querySelector(`${containerSelector}__background`); // SVG background for drawing connecting lines
     let primaryData, elementsData, activator;
 
-        primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
-        elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
-        startCoordsCorrection(elementsData); // Position all elements at their starting coordinates
-        createResponseDesign(); // Set up resize listener to recalculate coords if container size changes
-
     const flags = {
         animationOutRunning: false, // Tracks if "unfold" animation is currently running
         animationInRunning: false // Tracks if "fold back" animation is currently running
     }
 
+    primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
+    elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
+    startCoordsCorrection(elementsData); // Position all elements at their starting coordinates
+    createResponseDesign(); // Set up resize listener to recalculate coords if container size changes
+
     selector.addEventListener('click', (e) => {
         e.stopPropagation(); 
         if(e.target.closest(`${containerSelector}__element`)){ // Detect click on any menu item
+            console.log(`Event click is started at:`, e.target); 
             alert('TEST: Card is clicked!'); // Placeholder for your custom click handler
             // Add your code here
         };
     });
 
-    // Setup event listeners for mouse enter, leave, and click to trigger animations
-    lookEvent(selectorActivator, //event listener target
-        'mouseenter', // event
-        'animationOutRunning', // Name of the first animation to run
-        'animationInRunning', // Name of the last animation to run
-        () => {
-            moveItems(elementsData, 'targetCorner', 'animationOut'); // Animation executor
-    });
-    lookEvent(selector, 
-        'mouseleave', 
-        'animationInRunning', 
-        'animationOutRunning', 
-        () => {
-            moveItems(elementsData, 'initElementCorner', 'animationIn')
-    });
-    lookEvent(selectorActivator, 
-        'click', 
-        'animationOutRunning', 
-        'animationInRunning', 
-        () => {
-            moveItems(elementsData, 'targetCorner', 'animationOut')
-    });
+    let removeListener = setListeners();
+
     //functions    
 
     function createLine(){
@@ -60,16 +41,67 @@ export default function(containerSelector){
     }
 
     // Utility function to add event listener and control animation flags to prevent collisions
+
+    function setListeners(){
+        let activatorMousenter, selectorMouseleave, activatorClick, selectorClick;
+        if(window.innerWidth > 1200){
+            activatorMousenter = lookEvent(
+                selectorActivator, //event listener target
+                'mouseenter', // event
+                'animationOutRunning', // Name of the first animation to run
+                'animationInRunning', // Name of the last animation to run
+                () => {
+                    moveItems(elementsData, 'targetCorner', 'animationOut'); // Animation executor
+            });
+            selectorMouseleave = lookEvent(
+                selector, //event listener target
+                'mouseleave', // event
+                'animationInRunning', // Name of the first animation to run
+                'animationOutRunning', // Name of the last animation to run
+                () => {
+                    moveItems(elementsData, 'initElementCorner', 'animationIn'); // Animation executor
+            });
+        }else{
+            activatorClick = lookEvent(
+                selectorActivator, //event listener target
+                'click', // event
+                'animationOutRunning', // Name of the first animation to run
+                'animationInRunning', // Name of the last animation to run
+                () => {
+                    moveItems(elementsData, 'targetCorner', 'animationOut'); // Animation executor
+            });
+            selectorClick = lookEvent(
+                selector, //event listener target
+                'click', // event
+                'animationInRunning', // Name of the first animation to run
+                'animationOutRunning', // Name of the last animation to run
+                () => {
+                    moveItems(elementsData, 'initElementCorner', 'animationIn'); // Animation executor
+            });
+        }
+        
+        return {
+            activatorMousenter: activatorMousenter,
+            selectorMouseleave: selectorMouseleave,
+            activatorClick: activatorClick,
+            selectorClick: selectorClick
+        }
+    }
+
     function lookEvent(element, event, primaryAnimationFlag, secondaryAnimationFlag, primaryFunction){
-        element.addEventListener(event, (e) => {
-            console.log(`Event ${event} is started!`);
+        const handler = (e) => {
             e.stopPropagation();
+            console.log(`Event ${event} is WORKED at:`, e.target);
             flags[secondaryAnimationFlag] = false; //Stops the secondary animation if it's running
             if(!flags[primaryAnimationFlag] && !flags[secondaryAnimationFlag]){ // If neither animation is running
                 flags[primaryAnimationFlag] = true; // Allows animation to run, prevents animation collisions
                 primaryFunction(); //calls animation executor
             };
-        });
+        }
+
+        element.addEventListener(event, handler);
+
+        return () => element.removeEventListener(event, handler);
     };
 
     // Extract initial configuration data from selector element's data attributes
@@ -86,7 +118,6 @@ export default function(containerSelector){
     };
     // Calculate positions for each menu item for both initial and target (expanded) states
     function calculateCoords(primaryData, selector, elements){
-        console.log(`Coords calculation`);
         const result = [], 
               degToRad = deg => deg*(Math.PI / 180), 
               elementLeftProc = primaryData.childrenLeft,
@@ -199,12 +230,10 @@ export default function(containerSelector){
         obj.line.setAttribute('x2', `${x2}`);
         obj.line.setAttribute('y1', `${y1}`);
         obj.line.setAttribute('y2', `${y2}`);
-        console.log(`Lines drawn`)
     };
 
     // Clear all SVG lines from background
     function hideLines(){
-        console.log(`Hiding lines`);
         elementsData.forEach(obj => {
             obj.line.removeAttribute('x1');
             obj.line.removeAttribute('x2');
@@ -261,20 +290,25 @@ export default function(containerSelector){
     // Add resize listener to recalculate positions if container size changes
     function createResponseDesign(){
         let currentWidth = selector.offsetWidth,
-            timeoutId, i = 0;
+            timeoutId;
 
         window.addEventListener('resize', () => {
             clearTimeout(timeoutId);
             if(currentWidth !== selector.offsetWidth){
                 flags.animationInRunning = false;
                 flags.animationOutRunning = false;
-                console.log(`setting timeout ${++i}`)
                 timeoutId = setTimeout(() => {
                     requestAnimationFrame(() => {
+                        for(let removeMethod in removeListener){
+                            if(typeof removeListener[removeMethod] === 'function'){
+                                removeListener[removeMethod]()
+                            };
+                        };
                         currentWidth = selector.offsetWidth;
                         elementsData = calculateCoords(primaryData, selector, elements);
                         startCoordsCorrection(elementsData);
                         hideLines();
+                        removeListener = setListeners();
                     })
                 }, 100)
             };
@@ -283,7 +317,6 @@ export default function(containerSelector){
 
     // Apply initial positions to activator and menu items based on calculated data
     function startCoordsCorrection(elementsData){
-        console.log(`Coords correcting`);
         let minX = elementsData[0].elementCornerX,
             minY = elementsData[0].elementCornerY,
             ordNum = 0;
@@ -302,12 +335,10 @@ export default function(containerSelector){
         selectorActivator.style.left = minX + 'px';
         selectorActivator.style.top = minY + 'px';
         selectorActivator.style.height = elementsData[ordNum].elementHeight;
-        console.log(`Correcting finished`)
         activator = getActivatorParams(selectorActivator, minX, minY);
     };
 
     function getActivatorParams(activator, activatorCornerX, activatorCornerY){
-        console.log(`Creating activator params`);
         const activatorWidth = activator.offsetWidth,
               activatorHeight = activator.offsetHeight,
               activatorCenterX = activatorCornerX + activatorWidth/2,
