@@ -1,0 +1,179 @@
+@font-face {
+  font-family: "MontserratM";
+  src: url("../fonts/Montserrat-Medium.ttf") format("truetype");
+}
+@font-face {
+  font-family: "MontserratB";
+  src: url("../fonts/Montserrat-Bold.ttf") format("truetype");
+}
+* {
+  font-family: MontserratM;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+}
+
+.circle-selector {
+  position: relative;
+  width: 800px;
+  height: 1200px;
+  z-index: 100;
+}
+.circle-selector__activator {
+  position: absolute;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #000;
+  text-transform: uppercase;
+  font-size: 24px;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
+.circle-selector__element {
+  font-size: 18px;
+  position: absolute;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  background: #fff;
+  border: 1px solid #c7c7b6;
+  z-index: 500;
+}
+.circle-selector__element-wrap {
+  width: 100%;
+  height: 45%;
+}
+.circle-selector__element-wrap img {
+  display: block;
+  transition: filter 0.3s ease;
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.circle-selector__element-name {
+  font-family: "MontserratB";
+  display: block;
+  font-size: 1em;
+  padding: 5px 10px 0 10px;
+}
+.circle-selector__element-header {
+  font-family: "MontserratB";
+  display: block;
+  font-size: 0.75em;
+  padding: 5px 10px 0 10px;
+}
+.circle-selector__element-descr {
+  display: block;
+  font-size: 0.6em;
+  padding: 5px 10px 0 10px;
+}
+.circle-selector__element:hover {
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  transform: translateY(-4px);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  filter: brightness(1.1) contrast(1.1);
+}
+.circle-selector__activator, .circle-selector__element {
+  width: 170px;
+  aspect-ratio: 1/1.429;
+  border-radius: 3%;
+}
+.circle-selector__background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: -1000;
+  pointer-events: none;
+}
+
+@media (max-width: 1200px) {
+  .circle-selector {
+    width: 600px;
+    height: 900px;
+  }
+  .circle-selector__element {
+    font-size: 14px;
+  }
+  .circle-selector__element:hover {
+    transform: none;
+  }
+  .circle-selector__activator {
+    font-size: 21px;
+  }
+  .circle-selector__activator, .circle-selector__element {
+    width: 120px;
+  }
+  .circle-selector__activator {
+    display: flex;
+    align-items: center;
+  }
+}
+@media (max-width: 992px) {
+  .circle-selector {
+    width: 600px;
+    height: 750px;
+  }
+  .circle-selector__element {
+    font-size: 12px;
+  }
+  .circle-selector__activator {
+    font-size: 18px;
+  }
+  .circle-selector__activator, .circle-selector__element {
+    width: 113px;
+  }
+}
+@media (max-width: 768px) {
+  .circle-selector {
+    width: 550px;
+    height: 600px;
+  }
+  .circle-selector__element {
+    font-size: 11px;
+  }
+  .circle-selector__element-name, .circle-selector__element-header, .circle-selector__element-descr {
+    padding: 5px 5px 0 5px;
+  }
+  .circle-selector__activator {
+    font-size: 15px;
+  }
+  .circle-selector__activator, .circle-selector__element {
+    width: 105px;
+  }
+}
+@media (max-width: 576px) {
+  .circle-selector {
+    width: 280px;
+    height: 350px;
+  }
+  .circle-selector__element {
+    font-size: 10px;
+    aspect-ratio: 1/1.15;
+  }
+  .circle-selector__element-header {
+    display: none;
+  }
+  .circle-selector__element-descr {
+    padding-bottom: 5px;
+  }
+  .circle-selector__activator {
+    font-size: 13px;
+  }
+  .circle-selector__activator, .circle-selector__element {
+    width: 68px;
+  }
+}

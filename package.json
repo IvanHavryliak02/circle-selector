@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.lib.config.mjs",
     "preview": "vite preview"
   },
   "keywords": [
@@ -16,10 +16,8 @@
   "author": "Ivan",
   "license": "ISC",
   "devDependencies": {
-    "@vitejs/plugin-legacy": "^6.1.1",
     "autoprefixer": "^10.4.21",
     "sass": "^1.89.2",
-    "terser": "^5.43.1",
     "vite": "^6.3.5",
     "vite-plugin-imagemin": "^0.6.1"
   },

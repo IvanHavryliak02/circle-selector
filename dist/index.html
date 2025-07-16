@@ -3,16 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJECT_NAME</title>
-  <script type="module" crossorigin src="/js/index-BA1odGHK.js"></script>
-  <link rel="stylesheet" crossorigin href="/css/index-BTho-6dI.css">
-  <script type="module">import.meta.url;import("_").catch(()=>1);(async function*(){})().next();if(location.protocol!="file:"){window.__vite_is_modern_browser=true}</script>
-  <script type="module">!function(){if(window.__vite_is_modern_browser)return;console.warn("vite: loading legacy chunks, syntax error above and the same error below should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))},document.body.appendChild(n)}();</script>
+    <title>DEMO</title>
+  <script type="module" crossorigin src="./js/index.js"></script>
+  <link rel="stylesheet" crossorigin href="./css/index.css">
 </head>
 <body>
-
-  <script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>
-  <script nomodule crossorigin id="vite-legacy-polyfill" src="/js/polyfills-legacy-B93rlMtN.js"></script>
-  <script nomodule crossorigin id="vite-legacy-entry" data-src="/js/index-legacy-DvmfiLZD.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
+    <div class="container">
+        <div class="circle-selector">
+            <div class="circle-selector__activator">
+                Menu
+            </div>
+            <div class="circle-selector__element">
+                <div class="circle-selector__element-wrap">
+                    <img src="./images/burger.jpg" alt="burger">
+                </div>
+                <span class="circle-selector__element-name">🍔Burger</span>
+                <span class="circle-selector__element-header">Juicy. Bold. Classic.</span>
+                <p class="circle-selector__element-descr">Beef, cheese, and sauce done right.</p>
+            </div>
+            <div class="circle-selector__element">
+                <div class="circle-selector__element-wrap">
+                    <img src="./images/fries.jpg" alt="fries">
+                </div>
+                <span class="circle-selector__element-name">🍟Fries</span>
+                <span class="circle-selector__element-header">Crispy outside, tender inside.</span>
+                <p class="circle-selector__element-descr">Golden perfection in every bite.</p>
+            </div>
+            <div class="circle-selector__element">
+                <div class="circle-selector__element-wrap">
+                    <img src="./images/onion-rings.jpg" alt="onion-rings">
+                </div>
+                <span class="circle-selector__element-name">🧅Rings</span>
+                <span class="circle-selector__element-header">Light batter, bold flavor.</span>
+                <p class="circle-selector__element-descr">Crispy and made for dipping.</p>
+            </div>
+            <div class="circle-selector__element">
+                <div class="circle-selector__element-wrap">
+                    <img src="./images/salad.png" alt="salad">
+                </div>
+                <span class="circle-selector__element-name">🥗Salad</span>
+                <span class="circle-selector__element-header">Fresh and light.</span>
+                <p class="circle-selector__element-descr">A mix of greens with a zesty touch.</p>
+            </div>
+            <div class="circle-selector__element">
+                <div class="circle-selector__element-wrap">
+                    <img src="./images/wrap.jpg" alt="wrap">
+                </div>
+                <span class="circle-selector__element-name">🌯Wrap</span>
+                <span class="circle-selector__element-header">Tightly packed goodness.</span>
+                <p class="circle-selector__element-descr">Tortilla filled with juicy bites.</p>
+            </div>
+            <svg class="circle-selector__background"></svg>
+        </div>
+    </div>
 </body>
 </html>
