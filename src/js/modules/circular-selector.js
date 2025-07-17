@@ -1,17 +1,5 @@
 
-export default function(containerSelector){
-    const selectorSettings = {
-        initDelay: "200ms",
-        menuRadius: "0.8",
-        breakpoint: "1200px",
-        animationDuration: "800ms",
-        childrenTop: '50%',
-        childrenLeft: '50%',
-        startDeg: "90",
-        timingFunc: "easeInOutCubic",
-        lineColor: "gray",
-        lines: "show"
-    }
+export default function(containerSelector, selectorSettings, menuItemCallback){
     try{
         // Execution code: Initialize all needed elements and set up event listeners
         const selector = document.querySelector(containerSelector), // Main container element for the selector
@@ -28,18 +16,17 @@ export default function(containerSelector){
 
         setTimeout(() => {
             requestAnimationFrame(() => {
-                primaryData = createPrimaryData(selector, elements); // Initial setup data extracted from DOM/data-attributes
+                primaryData = createPrimaryData(elements); // Initial setup data extracted from DOM/data-attributes
                 elementsData = calculateCoords(primaryData, selector, elements); // Array of objects with positions and dimensions for each menu item
                 startCoordsCorrection(elementsData); // Position all elements at their starting coordinates
                 createResponseDesign(); // Set up resize listener to recalculate coords if container size changes
             })
-        }, parseInt(selectorSettings.initDelay) || 200);
+        }, parseInt(selectorSettings?.initDelay) || 200);
 
         selector.addEventListener('click', (e) => {
             e.stopPropagation(); 
             if(e.target.closest(`${containerSelector}__element`)){ // Detect click on any menu item
-                alert('TEST: Card is clicked!'); // Placeholder for your custom click handler
-                // Add your code here
+                menuItemCallback?.(e);
             };
         });
 
@@ -49,7 +36,7 @@ export default function(containerSelector){
 
         function createLine(){
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            const color = selectorSettings.lineColor || 'black'; 
+            const color = selectorSettings?.lineColor || 'black'; 
 
             line.setAttribute("stroke", color);
 
@@ -61,7 +48,7 @@ export default function(containerSelector){
 
         function setListeners(){
             let activatorMousenter, selectorMouseleave, activatorClick, selectorClick;
-            const breakpoint = parseInt(selectorSettings.breakpoint) || 1200;
+            const breakpoint = parseInt(selectorSettings?.breakpoint) || 1200;
             if(window.innerWidth > breakpoint){
                 activatorMousenter = lookEvent(
                     selectorActivator, //event listener target
@@ -123,10 +110,10 @@ export default function(containerSelector){
         };
 
         // Extract initial configuration data from selector element's data attributes
-        function createPrimaryData(selector, elements){
-            const startDeg = selectorSettings.startDeg || 90,  // Starting rotation angle for radial layout
-                childrenLeft = parseFloat(selectorSettings.childrenLeft) || 50, // Left offset % to children center
-                childrenTop = parseFloat(selectorSettings.childrenTop) || 50; // Top offset % to children center
+        function createPrimaryData(elements){
+            const startDeg = parseInt(selectorSettings?.startDeg) || 90,  // Starting rotation angle for radial layout
+                childrenLeft = parseFloat(selectorSettings?.childrenLeft) || 50, // Left offset % to children center
+                childrenTop = parseFloat(selectorSettings?.childrenTop) || 50; // Top offset % to children center
             return { 
                 startDeg: startDeg,
                 elementsAmount: elements.length,
@@ -142,7 +129,7 @@ export default function(containerSelector){
                 elementTopProc = primaryData.childrenTop,
                 parentWidth = selector.offsetWidth,
                 parentHeight = selector.offsetHeight,
-                radiusFactor = selectorSettings.menuRadius || 0.8;
+                radiusFactor = selectorSettings?.menuRadius || 0.8;
 
             elements.forEach((element,i) => { //element means menu item
                 const elementWidth = element.offsetWidth, 
@@ -196,7 +183,7 @@ export default function(containerSelector){
         // Animate movement of menu items from current position to target or initial position
         function moveItems(elementsData, target, animationName){
             const start = performance.now(),
-                duration = parseInt(selectorSettings.animationDuration);
+                duration = parseInt(selectorSettings?.animationDuration) || 800;
 
             elementsData.forEach(obj => {
                 obj.startX = obj.elementCornerX; // Save current position as animation start
@@ -210,7 +197,7 @@ export default function(containerSelector){
                 elementsData.forEach(obj => {
                     changeCoordinate(obj, 'startX', 'elementCornerX', `${target}X`, t, 'left');
                     changeCoordinate(obj, 'startY', 'elementCornerY', `${target}Y`, t, 'top');
-                    if(selectorSettings.lines === 'show'){ // Draw connecting lines if enabled
+                    if(selectorSettings?.lines === 'show'){ // Draw connecting lines if enabled
                         drawLines(obj);
                     }
                 });
@@ -265,7 +252,7 @@ export default function(containerSelector){
         function changeCoordinate(obj, startCoord, elementCoord, targetCoord, t, side) {
             let progress;
 
-            switch (selectorSettings.timingFunc) {
+            switch (selectorSettings?.timingFunc || 'linear') {
                 case 'linear':
                     progress = t;
                     break;
@@ -296,8 +283,6 @@ export default function(containerSelector){
                 case 'easeInOutQuart':
                     progress = t < 0.5 ? 8 * t ** 4 : 1 - 8 * (1 - t) ** 4;
                     break;
-                default:
-                    progress = t;
             }
 
             const distance = obj[targetCoord] - obj[startCoord];

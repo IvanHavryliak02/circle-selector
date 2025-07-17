@@ -1,26 +1,14 @@
-function circularSelector(containerSelector) {
-  const selectorSettings = {
-    initDelay: "200ms",
-    menuRadius: "0.8",
-    breakpoint: "1200px",
-    animationDuration: "800ms",
-    childrenTop: "50%",
-    childrenLeft: "50%",
-    startDeg: "90",
-    timingFunc: "easeInOutCubic",
-    lineColor: "gray",
-    lines: "show"
-  };
+function circularSelector(containerSelector, selectorSettings, menuItemCallback) {
   try {
     let createLine = function() {
       const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      const color = selectorSettings.lineColor || "black";
+      const color = (selectorSettings == null ? void 0 : selectorSettings.lineColor) || "black";
       line.setAttribute("stroke", color);
       background.appendChild(line);
       return line;
     }, setListeners = function() {
       let activatorMousenter, selectorMouseleave, activatorClick, selectorClick;
-      const breakpoint = parseInt(selectorSettings.breakpoint) || 1200;
+      const breakpoint = parseInt(selectorSettings == null ? void 0 : selectorSettings.breakpoint) || 1200;
       if (window.innerWidth > breakpoint) {
         activatorMousenter = lookEvent(
           selectorActivator,
@@ -94,8 +82,8 @@ function circularSelector(containerSelector) {
       };
       element.addEventListener(event, handler);
       return () => element.removeEventListener(event, handler);
-    }, createPrimaryData = function(selector2, elements2) {
-      const startDeg = selectorSettings.startDeg || 90, childrenLeft = parseFloat(selectorSettings.childrenLeft) || 50, childrenTop = parseFloat(selectorSettings.childrenTop) || 50;
+    }, createPrimaryData = function(elements2) {
+      const startDeg = parseInt(selectorSettings == null ? void 0 : selectorSettings.startDeg) || 90, childrenLeft = parseFloat(selectorSettings == null ? void 0 : selectorSettings.childrenLeft) || 50, childrenTop = parseFloat(selectorSettings == null ? void 0 : selectorSettings.childrenTop) || 50;
       return {
         startDeg,
         elementsAmount: elements2.length,
@@ -103,7 +91,7 @@ function circularSelector(containerSelector) {
         childrenTop
       };
     }, calculateCoords = function(primaryData2, selector2, elements2) {
-      const result = [], degToRad = (deg) => deg * (Math.PI / 180), elementLeftProc = primaryData2.childrenLeft, elementTopProc = primaryData2.childrenTop, parentWidth = selector2.offsetWidth, parentHeight = selector2.offsetHeight, radiusFactor = selectorSettings.menuRadius || 0.8;
+      const result = [], degToRad = (deg) => deg * (Math.PI / 180), elementLeftProc = primaryData2.childrenLeft, elementTopProc = primaryData2.childrenTop, parentWidth = selector2.offsetWidth, parentHeight = selector2.offsetHeight, radiusFactor = (selectorSettings == null ? void 0 : selectorSettings.menuRadius) || 0.8;
       elements2.forEach((element, i) => {
         const elementWidth = element.offsetWidth, elementHeight = element.offsetHeight;
         const elementCornerX = elementLeftProc / 100 * parentWidth - elementWidth / 2, elementCornerY = elementTopProc / 100 * parentHeight - elementHeight / 2, centerX = parentWidth / 2, centerY = parentHeight / 2;
@@ -138,7 +126,7 @@ function circularSelector(containerSelector) {
       }
       ;
     }, moveItems = function(elementsData2, target, animationName) {
-      const start = performance.now(), duration = parseInt(selectorSettings.animationDuration);
+      const start = performance.now(), duration = parseInt(selectorSettings == null ? void 0 : selectorSettings.animationDuration) || 800;
       elementsData2.forEach((obj) => {
         obj.startX = obj.elementCornerX;
         obj.startY = obj.elementCornerY;
@@ -148,7 +136,7 @@ function circularSelector(containerSelector) {
         elementsData2.forEach((obj) => {
           changeCoordinate(obj, "startX", "elementCornerX", `${target}X`, t, "left");
           changeCoordinate(obj, "startY", "elementCornerY", `${target}Y`, t, "top");
-          if (selectorSettings.lines === "show") {
+          if ((selectorSettings == null ? void 0 : selectorSettings.lines) === "show") {
             drawLines(obj);
           }
         });
@@ -183,7 +171,7 @@ function circularSelector(containerSelector) {
       });
     }, changeCoordinate = function(obj, startCoord, elementCoord, targetCoord, t, side) {
       let progress;
-      switch (selectorSettings.timingFunc) {
+      switch ((selectorSettings == null ? void 0 : selectorSettings.timingFunc) || "linear") {
         case "linear":
           progress = t;
           break;
@@ -214,8 +202,6 @@ function circularSelector(containerSelector) {
         case "easeInOutQuart":
           progress = t < 0.5 ? 8 * t ** 4 : 1 - 8 * (1 - t) ** 4;
           break;
-        default:
-          progress = t;
       }
       const distance = obj[targetCoord] - obj[startCoord];
       obj[elementCoord] = obj[startCoord] + distance * progress;
@@ -283,16 +269,16 @@ function circularSelector(containerSelector) {
     };
     setTimeout(() => {
       requestAnimationFrame(() => {
-        primaryData = createPrimaryData(selector, elements);
+        primaryData = createPrimaryData(elements);
         elementsData = calculateCoords(primaryData, selector, elements);
         startCoordsCorrection(elementsData);
         createResponseDesign();
       });
-    }, parseInt(selectorSettings.initDelay) || 200);
+    }, parseInt(selectorSettings == null ? void 0 : selectorSettings.initDelay) || 200);
     selector.addEventListener("click", (e) => {
       e.stopPropagation();
       if (e.target.closest(`${containerSelector}__element`)) {
-        alert("TEST: Card is clicked!");
+        menuItemCallback == null ? void 0 : menuItemCallback(e);
       }
       ;
     });
