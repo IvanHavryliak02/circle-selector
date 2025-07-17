@@ -63,6 +63,7 @@ so that its styles are applied to the elements.
   z-index: -1000;
   pointer-events: none;
 }
+```
 
 **Please, do not move or shift elements using CSS styles.**
 Their positioning relative to the parent is calculated and controlled by JavaScript.**
